@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Play } from "lucide-react";
 import heroImage from "@/assets/hero-volunteers.jpg";
+import HowItWorks from "./HowItWorks";
 
 const Hero = () => {
   return (
@@ -24,10 +24,7 @@ const Hero = () => {
               <Button variant="yellow" size="lg" className="text-lg px-8">
                 Get Started
               </Button>
-              <Button variant="yellow-outline" size="lg" className="text-lg px-8">
-                <Play className="w-5 h-5 mr-2" />
-                How it Works
-              </Button>
+              <HowItWorks />
             </div>
           </div>
           

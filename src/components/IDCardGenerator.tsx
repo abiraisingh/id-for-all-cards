@@ -3,8 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Calendar, User, Phone, Mail, Download } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar, User, Phone, Mail, Download, MapPin, Fingerprint } from "lucide-react";
 import { toast } from "sonner";
+import CameraCapture from "./CameraCapture";
+import BiometricCapture from "./BiometricCapture";
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface IDCardData {
   name: string;
@@ -12,7 +17,12 @@ interface IDCardData {
   dateOfBirth: string;
   phone: string;
   email: string;
+  city: string;
+  state: string;
+  country: string;
+  pincode: string;
   photo: string;
+  biometricId: string;
   idNumber: string;
 }
 
@@ -23,7 +33,12 @@ const IDCardGenerator = () => {
     dateOfBirth: "",
     phone: "",
     email: "",
+    city: "",
+    state: "",
+    country: "India",
+    pincode: "",
     photo: "",
+    biometricId: "",
     idNumber: ""
   });
   
@@ -38,7 +53,7 @@ const IDCardGenerator = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.fatherName || !formData.dateOfBirth || !formData.phone) {
+    if (!formData.name || !formData.fatherName || !formData.dateOfBirth || !formData.city || !formData.state) {
       toast.error("Please fill all required fields");
       return;
     }
@@ -56,14 +71,41 @@ const IDCardGenerator = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        handleInputChange('photo', e.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+  const handlePhotoCapture = (imageData: string) => {
+    handleInputChange('photo', imageData);
+  };
+
+  const handleBiometricCapture = (biometricId: string) => {
+    handleInputChange('biometricId', biometricId);
+  };
+
+  const downloadCard = async () => {
+    if (!generatedCard) return;
+    
+    try {
+      const cardElement = document.getElementById('id-card');
+      if (!cardElement) return;
+      
+      const canvas = await html2canvas(cardElement, {
+        scale: 2,
+        backgroundColor: null,
+        logging: false,
+      });
+      
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: [85.6, 53.98] // Standard credit card size
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      pdf.addImage(imgData, 'PNG', 0, 0, 85.6, 53.98);
+      
+      pdf.save(`IdentityFirst_ID_${generatedCard.idNumber}.pdf`);
+      toast.success("ID Card downloaded successfully!");
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error("Failed to download ID card. Please try again.");
     }
   };
 
@@ -122,14 +164,13 @@ const IDCardGenerator = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number *</Label>
+                  <Label htmlFor="phone">Phone Number (Optional)</Label>
                   <Input
                     id="phone"
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
                     placeholder="Enter phone number"
-                    required
                   />
                 </div>
 
@@ -144,15 +185,68 @@ const IDCardGenerator = () => {
                   />
                 </div>
 
+                {/* Address Information */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City *</Label>
+                    <Input
+                      id="city"
+                      value={formData.city}
+                      onChange={(e) => handleInputChange('city', e.target.value)}
+                      placeholder="Enter city"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="state">State *</Label>
+                    <Input
+                      id="state"
+                      value={formData.state}
+                      onChange={(e) => handleInputChange('state', e.target.value)}
+                      placeholder="Enter state"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="country">Country</Label>
+                    <Select value={formData.country} onValueChange={(value) => handleInputChange('country', value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="India">India</SelectItem>
+                        <SelectItem value="USA">USA</SelectItem>
+                        <SelectItem value="UK">UK</SelectItem>
+                        <SelectItem value="Canada">Canada</SelectItem>
+                        <SelectItem value="Australia">Australia</SelectItem>
+                        <SelectItem value="Other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="pincode">Pincode/ZIP</Label>
+                    <Input
+                      id="pincode"
+                      value={formData.pincode}
+                      onChange={(e) => handleInputChange('pincode', e.target.value)}
+                      placeholder="Enter pincode"
+                    />
+                  </div>
+                </div>
+
+                {/* Photo Capture */}
                 <div className="space-y-2">
-                  <Label htmlFor="photo">Photo Upload</Label>
-                  <Input
-                    id="photo"
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoUpload}
-                    className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-accent file:text-accent-foreground"
-                  />
+                  <Label>Photo Capture</Label>
+                  <CameraCapture onCapture={handlePhotoCapture} currentImage={formData.photo} />
+                </div>
+
+                {/* Biometric Capture */}
+                <div className="space-y-2">
+                  <Label>Biometric Verification</Label>
+                  <BiometricCapture onCapture={handleBiometricCapture} currentBiometric={formData.biometricId} />
                 </div>
 
                 <Button type="submit" className="w-full" size="lg">
@@ -164,7 +258,7 @@ const IDCardGenerator = () => {
 
           {/* Generated ID Card */}
           {generatedCard && (
-            <Card className="bg-gradient-to-br from-primary to-primary-dark text-primary-foreground">
+            <Card id="id-card" className="bg-gradient-to-br from-primary to-primary-dark text-primary-foreground">
               <CardContent className="p-8">
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-bold text-accent">IdentityFirst</h3>
@@ -204,13 +298,31 @@ const IDCardGenerator = () => {
                     </p>
                     <p className="font-medium">{generatedCard.dateOfBirth}</p>
                   </div>
+                  {generatedCard.phone && (
+                    <div>
+                      <p className="opacity-75 flex items-center gap-1">
+                        <Phone className="w-3 h-3" />
+                        Phone
+                      </p>
+                      <p className="font-medium">{generatedCard.phone}</p>
+                    </div>
+                  )}
                   <div>
                     <p className="opacity-75 flex items-center gap-1">
-                      <Phone className="w-3 h-3" />
-                      Phone
+                      <MapPin className="w-3 h-3" />
+                      Location
                     </p>
-                    <p className="font-medium">{generatedCard.phone}</p>
+                    <p className="font-medium">{generatedCard.city}, {generatedCard.state}</p>
                   </div>
+                  {generatedCard.biometricId && (
+                    <div>
+                      <p className="opacity-75 flex items-center gap-1">
+                        <Fingerprint className="w-3 h-3" />
+                        Biometric ID
+                      </p>
+                      <p className="font-medium text-xs">{generatedCard.biometricId}</p>
+                    </div>
+                  )}
                   {generatedCard.email && (
                     <div className="col-span-2">
                       <p className="opacity-75 flex items-center gap-1">
@@ -228,7 +340,7 @@ const IDCardGenerator = () => {
                       <p className="text-sm opacity-75">ID Number</p>
                       <p className="font-bold text-lg text-accent">{generatedCard.idNumber}</p>
                     </div>
-                    <Button variant="yellow" size="sm">
+                    <Button variant="yellow" size="sm" onClick={downloadCard}>
                       <Download className="w-4 h-4 mr-2" />
                       Download
                     </Button>

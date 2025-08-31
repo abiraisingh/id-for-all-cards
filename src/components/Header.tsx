@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 const Header = () => {
   return (
@@ -13,13 +14,15 @@ const Header = () => {
             <a href="#about" className="hover:text-accent transition-colors">About Us</a>
             <a href="#team" className="hover:text-accent transition-colors">Our Team</a>
             <a href="#id-generator" className="hover:text-accent transition-colors">Get ID Card</a>
-            <a href="#volunteer" className="hover:text-accent transition-colors">Volunteer</a>
-            <a href="#contact" className="hover:text-accent transition-colors">Contact</a>
+            <Link to="/volunteer" className="hover:text-accent transition-colors">Volunteer</Link>
+            <Link to="/contact" className="hover:text-accent transition-colors">Contact</Link>
           </nav>
           
-          <Button variant="yellow" className="font-semibold">
-            Donate Now
-          </Button>
+          <Link to="/donate">
+            <Button variant="yellow" className="font-semibold">
+              Donate Now
+            </Button>
+          </Link>
         </div>
       </div>
     </header>
