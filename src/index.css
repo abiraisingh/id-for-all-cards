@@ -17,8 +17,10 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* NGO Green Theme */
+    --primary: 158 64% 52%;
+    --primary-dark: 158 64% 42%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -26,15 +28,28 @@ All colors MUST be HSL.
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
+    /* Yellow accent for buttons */
+    --accent: 48 96% 64%;
     --accent-foreground: 222.2 47.4% 11.2%;
+    --accent-hover: 48 96% 54%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --ring: 158 64% 52%;
+
+    /* Custom NGO colors */
+    --ngo-green: 158 64% 52%;
+    --ngo-green-dark: 158 64% 42%;
+    --ngo-green-light: 158 64% 62%;
+    --ngo-yellow: 48 96% 64%;
+    --ngo-yellow-dark: 48 96% 54%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--ngo-green)), hsl(var(--ngo-green-dark)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--ngo-green)) 0%, hsl(var(--ngo-green-dark)) 100%);
 
     --radius: 0.5rem;
 
