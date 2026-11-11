@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Camera, RefreshCw, Check, X } from "lucide-react";
 import { toast } from "sonner";
@@ -15,6 +15,24 @@ const CameraCapture = ({ onCapture, currentImage }: CameraCaptureProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
+  useEffect(() => {
+    if (!isOpen || !stream) return;
+
+    const video = videoRef.current;
+    if (!video) return;
+
+    video.srcObject = stream;
+    void video.play().catch((error: unknown) => {
+      console.error("Error starting camera preview:", error);
+      toast.error("Camera is available, but its preview could not be started.");
+    });
+
+    return () => {
+      video.srcObject = null;
+      stream.getTracks().forEach((track) => track.stop());
+    };
+  }, [isOpen, stream]);
+
   const startCamera = useCallback(async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
@@ -27,10 +45,6 @@ const CameraCapture = ({ onCapture, currentImage }: CameraCaptureProps) => {
       
       setStream(mediaStream);
       setIsOpen(true);
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
     } catch (error) {
       console.error('Error accessing camera:', error);
       toast.error("Unable to access camera. Please check permissions.");
@@ -53,7 +67,15 @@ const CameraCapture = ({ onCapture, currentImage }: CameraCaptureProps) => {
     const video = videoRef.current;
     const context = canvas.getContext('2d');
 
-    if (!context) return;
+    if (!context) {
+      toast.error("Unable to capture a photo. Please try again.");
+      return;
+    }
+
+    if (!video.videoWidth || !video.videoHeight) {
+      toast.error("The camera is still starting. Please try again in a moment.");
+      return;
+    }
 
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;

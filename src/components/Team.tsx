@@ -12,7 +12,7 @@ const Team = () => {
       description: "Leads the organization with a vision to create lasting social impact through innovative identity solutions."
     },
     {
-      name: "Raj Patel",
+      name: "Ravi Patel",
       role: "Program Coordinator",
       image: coordinatorImage,
       description: "Oversees community programs and ensures effective project delivery across all locations."
@@ -32,7 +32,7 @@ const Team = () => {
   ];
 
   return (
-    <section id="team" className="py-16 lg:py-24 bg-primary text-primary-foreground">
+    <section id="team" className="scroll-mt-20 py-16 lg:py-24 bg-primary text-primary-foreground">
       <div className="container mx-auto px-6">
         <div className="text-center mb-16">
           <h2 className="text-3xl lg:text-4xl font-bold mb-4">Our Team</h2>
@@ -43,7 +43,11 @@ const Team = () => {
         
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
           {teamMembers.map((member, index) => (
-            <div key={index} className="bg-primary-foreground/10 rounded-lg p-6 text-center backdrop-blur-sm">
+            <div
+              key={index}
+              className="card-motion rounded-lg bg-primary-foreground/10 p-6 text-center backdrop-blur-sm"
+              style={{ animationDelay: `${index * 90}ms` }}
+            >
               <div className="relative mb-4">
                 <img 
                   src={member.image} 

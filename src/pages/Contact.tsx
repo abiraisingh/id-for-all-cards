@@ -1,3 +1,4 @@
+import { useState, type FormEvent } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -7,11 +8,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Mail, Phone, MapPin, Clock, MessageSquare, HelpCircle } from "lucide-react";
 import { toast } from "sonner";
+import { postSubmission } from "@/lib/api";
 
 const Contact = () => {
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    toast.success("Thank you for your message! We'll get back to you within 24 hours.");
+    setIsSubmitting(true);
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    try {
+      await postSubmission("contact", Object.fromEntries(formData.entries()));
+      toast.success("Thank you for your message! We'll get back to you within 24 hours.");
+      form.reset();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not send your message.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const contactMethods = [
@@ -92,7 +109,11 @@ const Contact = () => {
               {contactMethods.map((method, index) => {
                 const Icon = method.icon;
                 return (
-                  <Card key={index} className="text-center">
+                  <Card
+                    key={index}
+                    className="card-motion text-center"
+                    style={{ animationDelay: `${index * 90}ms` }}
+                  >
                     <CardHeader>
                       <Icon className="w-12 h-12 text-primary mx-auto mb-4" />
                       <CardTitle className="text-lg">{method.title}</CardTitle>
@@ -126,34 +147,35 @@ const Contact = () => {
                     <MessageSquare className="w-6 h-6 text-primary" />
                     Send us a Message
                   </h3>
-                  <Card>
+                  <Card className="card-motion">
                     <CardContent className="p-6">
                       <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="grid md:grid-cols-2 gap-4">
                           <div className="space-y-2">
                             <Label htmlFor="firstName">First Name *</Label>
-                            <Input id="firstName" required />
+                            <Input id="firstName" name="firstName" autoComplete="given-name" required />
                           </div>
                           <div className="space-y-2">
                             <Label htmlFor="lastName">Last Name *</Label>
-                            <Input id="lastName" required />
+                            <Input id="lastName" name="lastName" autoComplete="family-name" required />
                           </div>
                         </div>
 
                         <div className="space-y-2">
                           <Label htmlFor="email">Email Address *</Label>
-                          <Input id="email" type="email" required />
+                          <Input id="email" name="email" type="email" autoComplete="email" required />
                         </div>
 
                         <div className="space-y-2">
                           <Label htmlFor="phone">Phone Number</Label>
-                          <Input id="phone" type="tel" />
+                          <Input id="phone" name="phone" type="tel" autoComplete="tel" />
                         </div>
 
                         <div className="space-y-2">
                           <Label htmlFor="subject">Subject *</Label>
                           <select 
                             id="subject" 
+                            name="subject"
                             className="w-full px-3 py-2 border border-input rounded-md bg-background"
                             required
                           >
@@ -171,14 +193,15 @@ const Contact = () => {
                           <Label htmlFor="message">Message *</Label>
                           <Textarea 
                             id="message" 
+                            name="message"
                             placeholder="Please describe how we can help you..."
                             rows={6}
                             required
                           />
                         </div>
 
-                        <Button type="submit" className="w-full" size="lg">
-                          Send Message
+                        <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+                          {isSubmitting ? "Sending..." : "Send Message"}
                         </Button>
                       </form>
                     </CardContent>
@@ -192,7 +215,11 @@ const Contact = () => {
                   </h3>
                   <div className="space-y-4">
                     {faqs.map((faq, index) => (
-                      <Card key={index}>
+                      <Card
+                        key={index}
+                        className="card-motion"
+                        style={{ animationDelay: `${index * 90}ms` }}
+                      >
                         <CardContent className="p-6">
                           <h4 className="font-semibold mb-2 text-foreground">
                             {faq.question}

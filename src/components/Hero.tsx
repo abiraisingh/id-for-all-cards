@@ -21,8 +21,8 @@ const Hero = () => {
             </div>
             
             <div className="flex flex-col sm:flex-row gap-4">
-              <Button variant="yellow" size="lg" className="text-lg px-8">
-                Get Started
+              <Button asChild variant="yellow" size="lg" className="text-lg px-8">
+                <a href="#id-generator">Get Started</a>
               </Button>
               <HowItWorks />
             </div>

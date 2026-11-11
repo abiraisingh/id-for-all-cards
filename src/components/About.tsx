@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
 import { Users, FileText, Heart, Globe } from "lucide-react";
+import HowItWorks from "./HowItWorks";
 
 const About = () => {
   const stats = [
@@ -10,11 +10,11 @@ const About = () => {
   ];
 
   return (
-    <section id="about" className="py-16 lg:py-24 bg-background">
+    <section id="about" className="scroll-mt-20 py-16 lg:py-24 bg-background">
       <div className="container mx-auto px-6">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-6">
-            <div className="text-accent text-sm font-semibold uppercase tracking-wider">
+            <div className="text-accent lg:text-5xl font-semibold uppercase tracking-wider">
               About Us
             </div>
             <h2 className="text-3xl lg:text-5xl font-bold text-foreground">
@@ -30,16 +30,24 @@ const About = () => {
               not location, ensuring everyone can access the services they need to rebuild their lives.
             </p>
             
-            <Button variant="yellow" size="lg" className="mt-6">
-              Learn More
-            </Button>
+            <div className="mt-6">
+              <HowItWorks
+                triggerLabel="Learn More"
+                showPlayIcon={false}
+                triggerVariant="yellow"
+              />
+            </div>
           </div>
           
           <div className="grid grid-cols-2 gap-6">
             {stats.map((stat, index) => {
               const Icon = stat.icon;
               return (
-                <div key={index} className="bg-card rounded-lg p-6 shadow-lg border text-center">
+                <div
+                  key={index}
+                  className="card-motion rounded-lg border bg-card p-6 text-center shadow-lg"
+                  style={{ animationDelay: `${index * 90}ms` }}
+                >
                   <Icon className="w-8 h-8 text-primary mx-auto mb-3" />
                   <div className="text-2xl font-bold text-foreground mb-1">{stat.value}</div>
                   <div className="text-muted-foreground text-sm">{stat.label}</div>

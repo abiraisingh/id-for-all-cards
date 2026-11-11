@@ -51,12 +51,13 @@ const BiometricCapture = ({ onCapture, currentBiometric }: BiometricCaptureProps
         onCapture(biometricId);
         toast.success("Biometric data captured successfully!");
       }
-    } catch (error: any) {
-      console.error('Biometric capture error:', error);
+    } catch (error: unknown) {
+      const authError = error as Partial<DOMException>;
+      console.error('Biometric capture error:', authError);
       
-      if (error.name === 'NotAllowedError') {
+      if (authError.name === 'NotAllowedError') {
         toast.error("Biometric authentication was cancelled or not allowed.");
-      } else if (error.name === 'NotSupportedError') {
+      } else if (authError.name === 'NotSupportedError') {
         toast.error("Biometric authentication is not supported on this device.");
       } else {
         // Fallback: Generate a simulated biometric ID for demo purposes

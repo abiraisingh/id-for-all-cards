@@ -1,3 +1,4 @@
+import { useState, type FormEvent } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -7,11 +8,30 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, Heart, Clock, MapPin, Mail, Phone } from "lucide-react";
 import { toast } from "sonner";
+import { postSubmission } from "@/lib/api";
 
 const Volunteer = () => {
-  const handleSubmit = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    toast.success("Thank you for your interest in volunteering! We'll contact you soon.");
+    setIsSubmitting(true);
+
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+
+    try {
+      await postSubmission("volunteer", {
+        ...Object.fromEntries(formData.entries()),
+        interests: formData.getAll("interests"),
+      });
+      toast.success("Thank you for your interest in volunteering! We'll contact you soon.");
+      form.reset();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not submit your application.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const opportunities = [
@@ -73,7 +93,11 @@ const Volunteer = () => {
               {opportunities.map((opportunity, index) => {
                 const Icon = opportunity.icon;
                 return (
-                  <Card key={index}>
+                  <Card
+                    key={index}
+                    className="card-motion"
+                    style={{ animationDelay: `${index * 90}ms` }}
+                  >
                     <CardHeader className="text-center">
                       <Icon className="w-12 h-12 text-primary mx-auto mb-4" />
                       <CardTitle className="text-lg">{opportunity.title}</CardTitle>
@@ -109,28 +133,29 @@ const Volunteer = () => {
                     <div className="grid md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="firstName">First Name *</Label>
-                        <Input id="firstName" required />
+                        <Input id="firstName" name="firstName" autoComplete="given-name" required />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="lastName">Last Name *</Label>
-                        <Input id="lastName" required />
+                        <Input id="lastName" name="lastName" autoComplete="family-name" required />
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="email">Email Address *</Label>
-                      <Input id="email" type="email" required />
+                      <Input id="email" name="email" type="email" autoComplete="email" required />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone Number *</Label>
-                      <Input id="phone" type="tel" required />
+                      <Input id="phone" name="phone" type="tel" autoComplete="tel" required />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="availability">Availability *</Label>
                       <select 
                         id="availability" 
+                        name="availability"
                         className="w-full px-3 py-2 border border-input rounded-md bg-background"
                         required
                       >
@@ -168,6 +193,7 @@ const Volunteer = () => {
                       <Label htmlFor="experience">Previous Volunteer Experience</Label>
                       <Textarea 
                         id="experience" 
+                        name="experience"
                         placeholder="Tell us about any previous volunteer experience (optional)"
                         rows={4}
                       />
@@ -177,14 +203,15 @@ const Volunteer = () => {
                       <Label htmlFor="motivation">Why do you want to volunteer?</Label>
                       <Textarea 
                         id="motivation" 
+                        name="motivation"
                         placeholder="Share your motivation for volunteering with us"
                         rows={4}
                         required
                       />
                     </div>
 
-                    <Button type="submit" className="w-full" size="lg">
-                      Submit Volunteer Application
+                    <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
+                      {isSubmitting ? "Submitting..." : "Submit Volunteer Application"}
                     </Button>
                   </form>
                 </CardContent>
