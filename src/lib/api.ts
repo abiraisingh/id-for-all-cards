@@ -2,6 +2,8 @@ interface ApiErrorResponse {
   error?: string;
 }
 
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/+$/, "");
+
 export async function postSubmission<TResponse>(
   path: string,
   payload: unknown,
@@ -9,7 +11,7 @@ export async function postSubmission<TResponse>(
   let response: Response;
 
   try {
-    response = await fetch(`/api/${path}`, {
+    response = await fetch(`${apiBaseUrl}/api/${path}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -37,7 +39,7 @@ export async function verifyIDCard(
   let response: Response;
 
   try {
-    response = await fetch(`/api/verify/${encodeURIComponent(idNumber)}`);
+    response = await fetch(`${apiBaseUrl}/api/verify/${encodeURIComponent(idNumber)}`);
   } catch {
     throw new Error("Cannot reach the verification service. Please try again later.");
   }
@@ -58,7 +60,7 @@ export async function verifyIDCard(
 export async function getDonationCheckoutStatus(): Promise<{ checkoutAvailable: boolean }> {
   let response: Response;
   try {
-    response = await fetch("/api/donations/status");
+    response = await fetch(`${apiBaseUrl}/api/donations/status`);
   } catch {
     throw new Error("Cannot reach the donation service.");
   }

@@ -12,6 +12,15 @@ const app = express();
 const port = Number(process.env.PORT) || 3001;
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(currentDir, "..");
+const allowedOrigins = new Set(
+  (process.env.CORS_ORIGINS
+    ?? (process.env.NODE_ENV === "production"
+      ? ""
+      : "http://localhost:8080,http://127.0.0.1:8080"))
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean),
+);
 
 mongoose.set("bufferCommands", false);
 app.disable("x-powered-by");
@@ -32,6 +41,28 @@ app.use(helmet({
     },
   },
 }));
+app.use((req, res, next) => {
+  const origin = req.get("origin");
+  const requestOrigin = `${req.protocol}://${req.get("host")}`;
+  if (!origin || origin === requestOrigin) {
+    next();
+    return;
+  }
+  if (!allowedOrigins.has(origin)) {
+    res.status(403).json({ error: "This website is not allowed to use the API." });
+    return;
+  }
+
+  res.setHeader("Access-Control-Allow-Origin", origin);
+  res.setHeader("Vary", "Origin");
+  if (req.method === "OPTIONS") {
+    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+    res.sendStatus(204);
+    return;
+  }
+  next();
+});
 app.post(
   "/api/webhooks/razorpay",
   express.raw({ type: "application/json", limit: "20kb" }),

@@ -29,13 +29,14 @@ All submission routes validate input on the server, limit request size, and appl
 
 ## Render deployment
 
-The included `render.yaml` configures a single Node web service that builds the frontend, serves it from Express, and uses `/api/health` as its health check.
+The included `render.yaml` configures a Node web service that builds the frontend, serves it from Express, and uses `/api/health` as its health check. This supports a same-origin deployment; if the frontend is hosted separately on Vercel, configure it to call the Render API directly:
 
 1. Create a MongoDB Atlas database and a database user with only the required database access.
 2. Create a Render Blueprint from this repository, or create a Node web service with build command `npm ci && npm run build` and start command `npm start`.
-3. Set `MONGODB_URI`, a long random `ADMIN_API_TOKEN`, and Razorpay test/live `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and `RAZORPAY_WEBHOOK_SECRET` as secret environment variables in Render. Do not commit credentials. Configure Atlas Network Access to permit connections from the service's outbound IP addresses.
-4. In Razorpay, register `https://<your-render-service>/api/webhooks/razorpay` as a webhook for `payment.captured` and `order.paid`, and use the same webhook secret in `RAZORPAY_WEBHOOK_SECRET`.
-5. After deployment, verify `https://<your-render-service>/api/health` reports a connected database.
+3. Set `MONGODB_URI`, a long random `ADMIN_API_TOKEN`, and `CORS_ORIGINS` to the exact public frontend origin (for example `https://identityfirst.example`). Add any production Vercel preview or custom domains that need access as separate comma-separated origins. Do not include paths or trailing slashes, and do not commit credentials. Configure Atlas Network Access to permit connections from the service's outbound IP addresses.
+4. Set `VITE_API_BASE_URL` in the Vercel project's production build environment to the Render service origin (for example `https://identityfirst.onrender.com`, without `/api` or a trailing slash), then redeploy the frontend. The frontend build defaults to same-origin API requests when this variable is empty.
+5. To enable donations, set Razorpay live `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and `RAZORPAY_WEBHOOK_SECRET` as secret environment variables in Render. Register `https://<your-render-service>/api/webhooks/razorpay` as a webhook for `payment.captured` and `order.paid`, using the same webhook secret.
+6. After deployment, verify `https://<your-render-service>/api/health` reports a connected database and test submissions/verification from the live frontend. Test Razorpay in test mode before switching to live credentials.
 
 ## Data and privacy
 
