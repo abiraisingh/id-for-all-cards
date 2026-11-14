@@ -1,45 +1,177 @@
-# IdentityFirst
+# IdentityFirst (NeoID) — Dignity Through Identity
 
-IdentityFirst is a React/Vite site served by an Express API. MongoDB stores contact messages, volunteer applications, donation pledges, and consented ID-card records.
+> **A privacy-first digital identity and welfare access platform empowering unhoused individuals to obtain verifiable ID cards without residential address proof.**
 
-## Run locally
+---
 
-Requirements: Node.js 22 or newer and a MongoDB database (local MongoDB or MongoDB Atlas).
+## 📋 Overview
 
-1. Install dependencies with `npm ci`.
-2. Copy `.env.example` to `.env` and set `MONGODB_URI` and a long random `ADMIN_API_TOKEN`. To enable donations locally, also set Razorpay test credentials and a webhook secret.
-3. Run `npm run dev` to start the frontend and API together. `npm run dev:frontend` starts only Vite; API-backed forms require the API process.
-4. Open `http://localhost:8080`. The Vite server proxies `/api` requests to Express on port 3001.
+**IdentityFirst** bridges the documentation gap for unhoused populations who are routinely excluded from essential government and welfare services—such as healthcare, emergency shelters, and food distribution—due to the lack of permanent address proof.
 
-For production, `npm run build` builds the frontend and `npm start` starts Express, which serves both the API and the built site. Set `PORT`, `MONGODB_URI`, and `ADMIN_API_TOKEN` in the environment. The API exits on startup if MongoDB is not configured or cannot be reached.
+Built with a **React + Vite** frontend and an **Express + MongoDB** backend, the platform enables beneficiaries and field volunteers to generate cryptographically secure, verifiable digital ID cards while keeping sensitive biometric and photo data strictly on the client side.
 
-## API
+### ✨ Key Features
 
-- `GET /api/health` reports API and database readiness.
-- `POST /api/contact` saves a validated contact message.
-- `POST /api/volunteer` saves a validated volunteer application.
-- `GET /api/donations/status` reports whether Razorpay checkout is configured.
-- `POST /api/donations` creates a one-time INR donation and a Razorpay order. The donation is marked paid only after the backend verifies the payment signature and confirms the captured payment with Razorpay.
-- `POST /api/donations/verify` verifies the Razorpay checkout response. `POST /api/webhooks/razorpay` processes signed captured-payment notifications so successful payments can still be recorded if the donor closes checkout before returning. Do not trust client-side payment success alone.
-- `POST /api/id-cards` creates a card record after separate explicit consent to store card details and display the masked name publicly. Card numbers are generated on the server using cryptographically secure randomness. Photos and biometric IDs are never sent to or stored by the API.
-- `GET /api/verify/:idNumber` publicly checks card status and issue date and returns a masked cardholder name; it never exposes full name, birth date, contact details, photo, or address.
-- `GET /api/admin/id-cards/:idNumber` returns a full stored record only to authorized administrators. Keep the bearer token secret and use it only in server-side tools.
+- **Address-Free Digital ID Issuance:** Generates unique, verifiable ID numbers on the server using cryptographically secure randomness without requiring residential address proof.
+- **Privacy-by-Design Architecture:** Photos and biometric identifiers never leave the user's browser and are never transmitted to or stored on the backend.
+- **Consent-Gated Public Verification:** Public ID lookup (`GET /api/verify/:idNumber`) exposes only validity status, issue date, and an explicitly consented masked cardholder name.
+- **Secure Donation Processing:** Integrates Razorpay one-time INR donations with server-side signature verification and idempotent webhook handling (`payment.captured` & `order.paid`).
+- **Hardened API Security:** Enforces server-side input validation, request payload size limits, strict CORS origin allowlisting, token-protected admin lookups, and per-IP rate limiting across submission and verification routes.
+- **Community & Volunteer Intake:** Validated contact and volunteer registration pipelines with real-time UI error handling.
 
-All submission routes validate input on the server, limit request size, and apply per-IP rate limits. Public verification is also rate-limited. The forms display errors when a submission fails instead of reporting false success.
+---
 
-## Render deployment
+## 🛠️ Tech Stack
 
-The included `render.yaml` configures a Node web service that builds the frontend, serves it from Express, and uses `/api/health` as its health check. This supports a same-origin deployment; if the frontend is hosted separately on Vercel, configure it to call the Render API directly:
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend** | React, TypeScript/JavaScript, Vite, Tailwind CSS |
+| **Backend** | Node.js (v22+), Express.js, RESTful APIs |
+| **Database** | MongoDB / MongoDB Atlas |
+| **Payments & Webhooks** | Razorpay Checkout & Signed Webhooks |
+| **Deployment** | Vercel (Frontend), Render (Backend / Full-Stack Blueprint) |
 
-1. Create a MongoDB Atlas database and a database user with only the required database access.
-2. Create a Render Blueprint from this repository, or create a Node web service with build command `npm ci && npm run build` and start command `npm start`.
-3. Set `MONGODB_URI`, a long random `ADMIN_API_TOKEN`, and `CORS_ORIGINS` to the exact public frontend origin (for example `https://identityfirst.example`). Add any production Vercel preview or custom domains that need access as separate comma-separated origins. Do not include paths or trailing slashes, and do not commit credentials. Configure Atlas Network Access to permit connections from the service's outbound IP addresses.
-4. Set `VITE_API_BASE_URL` in the Vercel project's production build environment to the Render service origin (for example `https://identityfirst.onrender.com`, without `/api` or a trailing slash), then redeploy the frontend. The frontend build defaults to same-origin API requests when this variable is empty.
-5. To enable donations, set Razorpay live `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and `RAZORPAY_WEBHOOK_SECRET` as secret environment variables in Render. Register `https://<your-render-service>/api/webhooks/razorpay` as a webhook for `payment.captured` and `order.paid`, using the same webhook secret.
-6. After deployment, verify `https://<your-render-service>/api/health` reports a connected database and test submissions/verification from the live frontend. Test Razorpay in test mode before switching to live credentials.
+---
 
-## Data and privacy
+## 🚀 Getting Started (Local Development)
 
-After separate explicit consent to storage and public masked-name display, ID-card records store name, guardian name, birth date, contact and address fields, status, and consent timestamps/versions. Photos and biometric IDs remain in the browser and are not sent to this API. Public verification exposes validity, issue date, and (with consent) a masked name; full record lookup requires the admin token. Contact and volunteer records contain personal contact details. Donation pledge records contain the amount and frequency, and may contain donor contact details unless the donor selects anonymous. Restrict access to the MongoDB database and establish an appropriate retention/deletion policy before collecting real submissions.
+### Prerequisites
 
-Recurring donations are not enabled. New donation records store the amount, frequency, and payment references but not donor contact details; older pledge records may contain those details. The amount examples on the donation page are illustrative rather than fixed allocations. The API has no public endpoint for reading contact or volunteer submissions.
+- **Node.js** `v22.0.0` or higher
+- **MongoDB** instance (local MongoDB server or a [MongoDB Atlas](https://mongodb.com) cluster)
+- *(Optional)* **Razorpay Test Credentials** to test donation flows locally
+
+### Installation & Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone [https://github.com/abiraisingh/id-for-all-cards]
+   cd id-for-all-cards
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm ci
+   ```
+
+3. **Configure environment variables**
+   Copy `.env.example` to `.env` and populate the required values:
+   ```bash
+   cp .env.example .env
+   ```
+
+   | Variable | Required | Description |
+   | :--- | :---: | :--- |
+   | `PORT` | No | Express API port (defaults to `3001` in dev) |
+   | `MONGODB_URI` | **Yes** | MongoDB connection string (API exits on startup if missing/unreachable) |
+   | `ADMIN_API_TOKEN` | **Yes** | Long, cryptographically random secret token for admin routes |
+   | `CORS_ORIGINS` | Prod | Comma-separated list of allowed frontend origins (no trailing slashes) |
+   | `VITE_API_BASE_URL` | Split Deploy | Public backend origin when frontend is hosted separately (e.g., Vercel) |
+   | `RAZORPAY_KEY_ID` | Optional | Razorpay API Key ID (test or live) |
+   | `RAZORPAY_KEY_SECRET` | Optional | Razorpay API Key Secret |
+   | `RAZORPAY_WEBHOOK_SECRET` | Optional | Secret used to verify Razorpay webhook signatures |
+
+4. **Run the development servers**
+   - **Full-Stack (Frontend + API):**
+     ```bash
+     npm run dev
+     ```
+     Open **`http://localhost:8080`**. Vite automatically proxies `/api` requests to Express on port `3001`.
+   - **Frontend Only:**
+     ```bash
+     npm run dev:frontend
+     ```
+     *(Note: API-backed forms and verification require the Express process to be running.)*
+
+5. **Production Build & Start**
+   ```bash
+   npm run build
+   npm start
+   ```
+   `npm start` launches Express in production mode, serving both the REST API and the compiled frontend bundle.
+
+---
+
+## 📡 API Reference
+
+All submission endpoints validate payloads on the server, restrict request body sizes, and enforce per-IP rate limits.
+
+### System & Health
+
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/health` | Public | Reports API health and MongoDB connection readiness. |
+
+### Digital ID Cards & Verification
+
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/id-cards` | Public (Rate-Limited) | Creates an ID card record after separate explicit consent for storage and masked-name display. Generates a cryptographically secure ID number server-side. |
+| `GET` | `/api/verify/:idNumber` | Public (Rate-Limited) | Checks card validity and issue date, returning a masked name if consented. Never exposes full name, DOB, contact info, address, or photos. |
+| `GET` | `/api/admin/id-cards/:idNumber` | Admin (`Bearer` Token) | Returns the complete stored record for authorized administrators. |
+
+### Donations (Razorpay)
+
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/donations/status` | Public | Reports whether Razorpay checkout is active and configured. |
+| `POST` | `/api/donations` | Public (Rate-Limited) | Initializes a one-time INR donation and creates a Razorpay order. |
+| `POST` | `/api/donations/verify` | Public | Verifies the Razorpay checkout signature and confirms payment capture before marking as paid. |
+| `POST` | `/api/webhooks/razorpay` | Razorpay Webhook | Processes signed `payment.captured` and `order.paid` events so payments are recorded even if the donor closes checkout early. |
+
+### Outreach & Volunteering
+
+| Method | Endpoint | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/contact` | Public (Rate-Limited) | Validates and stores a contact inquiry. *(No public read endpoint exists.)* |
+| `POST` | `/api/volunteer` | Public (Rate-Limited) | Validates and stores a volunteer application. *(No public read endpoint exists.)* |
+
+---
+
+## ☁️ Deployment Guide
+
+This repository includes a `render.yaml` Blueprint for deploying on **Render** (either as a unified full-stack service or paired with **Vercel** for the frontend).
+
+### 1. Database Setup (MongoDB Atlas)
+1. Provision a **MongoDB Atlas** cluster.
+2. Create a dedicated database user with least-privilege read/write access to the application database.
+3. Configure **Atlas Network Access** to allow connections from your Render service's outbound IP addresses.
+
+### 2. Backend Deployment (Render)
+1. Create a **Render Blueprint** from this repository, or configure a Node Web Service manually:
+   - **Build Command:** `npm ci && npm run build`
+   - **Start Command:** `npm start`
+   - **Health Check Path:** `/api/health`
+2. Configure environment variables in Render:
+   - `MONGODB_URI`: Your MongoDB Atlas connection string.
+   - `ADMIN_API_TOKEN`: A strong, randomly generated secret string.
+   - `CORS_ORIGINS`: Comma-separated exact public frontend origins without paths or trailing slashes (e.g., `https://vercel.app`).
+
+### 3. Split Frontend Deployment (Vercel — Optional)
+If hosting the frontend separately on Vercel instead of serving it from Express:
+1. Set `VITE_API_BASE_URL` in Vercel's Production environment variables to your Render service origin without `/api` or a trailing slash (e.g., `https://onrender.com`). *(Leave empty if using same-origin hosting on Render.)*
+2. Redeploy the Vercel project so Vite embeds the API origin at build time.
+
+### 4. Payment Webhooks (Razorpay)
+1. Add `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and `RAZORPAY_WEBHOOK_SECRET` as secret environment variables in Render.
+2. In your Razorpay Dashboard, register `https://<your-render-service>/api/webhooks/razorpay` for **`payment.captured`** and **`order.paid`** events using the exact same webhook secret.
+3. Validate end-to-end checkout in Razorpay **Test Mode** before switching to live credentials.
+
+---
+
+## 🔒 Data Governance & Privacy Policy
+
+IdentityFirst is engineered around strict data minimization and informed consent:
+
+- **Zero Server-Side Biometrics:** Beneficiary photos and biometric IDs remain strictly in the browser and are never sent to or persisted by the Express API.
+- **Granular Consent Tracking:** ID records are stored only after explicit user consent for record storage and separate explicit consent for public masked-name display. Consent timestamps and policy versions are logged alongside records.
+- **Minimal Public Exposure:** Public verification endpoints never leak full names, birth dates, contact details, or addresses.
+- **Protected Admin Access:** Full record retrieval requires the `ADMIN_API_TOKEN` bearer credential and should only be invoked from trusted server-side tools. Contact and volunteer submissions have no public read endpoints.
+
+---
+
+
+## 👤 Author
+
+Abirai Singh
+
